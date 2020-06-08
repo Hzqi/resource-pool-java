@@ -90,7 +90,7 @@ public class Pool<T> {
             try {
                 // 不断检查
                 while (true) {
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                     long now = System.currentTimeMillis();
                     for (LocalPool<T> localPool : localPools) {
                         localPool.lockWithModify((inUse, entries) -> {
