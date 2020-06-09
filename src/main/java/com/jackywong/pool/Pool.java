@@ -1,9 +1,6 @@
 package com.jackywong.pool;
 
-import com.jackywong.pool.functional.ThrownConsumer;
-import com.jackywong.pool.functional.ThrownFunction;
-import com.jackywong.pool.functional.ThrownSupplier;
-import com.jackywong.pool.functional.Tuple;
+import com.jackywong.pool.functional.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -131,6 +128,16 @@ public class Pool<T> {
             //报错就直接抛出
             //最后无论成不成功都把资源放回去
             putResource(local, resource);
+        }
+    }
+
+    //利用资源池里的资源干活, 返回类型安全
+    public <R> Try<R> tryWithResource(ThrownFunction<T,R> func) {
+        try {
+            R res = withResource(func);
+            return Try.success(res);
+        } catch (Exception ex) {
+            return Try.failure(ex);
         }
     }
 
