@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -29,6 +30,9 @@ public class TestSinglePool {
     public void testPool() throws Exception {
         AtomicInteger index = new AtomicInteger(0);
         AtomicInteger uses = new AtomicInteger(0);
+        int concurrent = 100;
+        CountDownLatch count = new CountDownLatch(concurrent);
+
         Pool<MyResource> pool = Pool.createPool(
                 () -> {
                     MyResource myResource = new MyResource("Name_"+index.addAndGet(1), new AtomicInteger(0));
@@ -38,15 +42,18 @@ public class TestSinglePool {
                 myResource -> {
                     uses.addAndGet(myResource.uses.get());
                     System.out.println(myResource.name+" close at: " + nowString() + " and it uses: " + myResource.uses.get());
+                    for(int i = 0; i<myResource.uses.get(); i++) {
+                        count.countDown();
+                    }
                 },
-                3, 500L, 10);
+                3, 500L, 30);
 
         AtomicInteger invokes = new AtomicInteger(0);
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < concurrent; i++) {
             testWithPool(i, invokes, pool);
         }
 
-        Thread.sleep(5000);
+        count.await();
         System.out.println("invokes:"+invokes.get());
         System.out.println("uses:"+uses.get());
     }
